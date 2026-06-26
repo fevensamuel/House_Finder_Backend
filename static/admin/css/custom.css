@@ -1,0 +1,4 @@
+/* Hide the original recent actions widget in the right sidebar */
+#content-related {
+    display: none;
+}

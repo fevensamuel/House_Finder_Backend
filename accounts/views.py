@@ -6,7 +6,6 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.contrib.auth import authenticate
 from .models import User
 from .serializers import RegisterSerializer, UserSerializer, ProfileUpdateSerializer
-from rest_framework import status
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -62,3 +61,14 @@ class AvatarUploadView(APIView):
             request.user.save()
             return Response({'avatar': request.user.avatar.url if request.user.avatar else None})
         return Response({'error': 'No image provided'}, status=400)
+
+class UpdateFCMTokenView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        token = request.data.get('fcm_token')
+        if token:
+            request.user.fcm_token = token
+            request.user.save()
+            return Response({'status': 'token saved'})
+        return Response({'error': 'token required'}, status=400)

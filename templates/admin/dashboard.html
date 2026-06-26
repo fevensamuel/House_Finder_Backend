@@ -1,0 +1,100 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Dashboard</h1>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Listings</h5>
+                    <p class="card-text display-4">{{ total_listings }}</p>
+                    <span class="badge bg-warning">{{ pending_listings }} pending</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Users</h5>
+                    <p class="card-text display-4">{{ total_users }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Bookings</h5>
+                    <p class="card-text display-4">{{ total_bookings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Purchases</h5>
+                    <p class="card-text display-4">{{ total_purchases }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Commission & Payouts -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Commission Earned</div>
+                <div class="card-body">
+                    <p>Total: <strong>{{ total_commission }} ETB</strong></p>
+                    <p>This month: <strong>{{ monthly_commission }} ETB</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Pending Payouts</div>
+                <div class="card-body">
+                    <p>Amount: <strong>{{ total_pending_payouts }} ETB</strong></p>
+                    <p>Number: <strong>{{ pending_payouts|length }}</strong></p>
+                    <a href="{% url 'admin:payments_payout_changelist' %}?status__exact=pending" class="btn btn-sm btn-primary">View & Pay</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Recent Bookings</div>
+                <ul class="list-group list-group-flush">
+                    {% for b in recent_bookings %}
+                    <li class="list-group-item">{{ b.listing.title }} - {{ b.total_amount }} ETB ({{ b.paid_at|date:"Y-m-d" }})</li>
+                    {% empty %}
+                    <li class="list-group-item">No bookings yet</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Recent Purchases</div>
+                <ul class="list-group list-group-flush">
+                    {% for p in recent_purchases %}
+                    <li class="list-group-item">{{ p.listing.title }} - {{ p.total_amount }} ETB ({{ p.paid_at|date:"Y-m-d" }})</li>
+                    {% empty %}
+                    <li class="list-group-item">No purchases yet</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

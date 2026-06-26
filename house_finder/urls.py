@@ -3,8 +3,10 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import api_root
+from payments.admin_views import admin_dashboard
 
 urlpatterns = [
+    path('admin/dashboard/', admin_dashboard, name='admin_dashboard'),
     path('admin/', admin.site.urls),
     path('api/v1/', api_root),                     
     path('api/v1/', include('accounts.urls')),

@@ -13,6 +13,7 @@ class User(AbstractUser):
     national_id_number = models.CharField(max_length=20, blank=True, null=True)
     fayda_fin = models.CharField(max_length=20, blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    fcm_token = models.CharField(max_length=255, blank=True, null=True)
     # avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     
     # Pending edits (require admin approval)
