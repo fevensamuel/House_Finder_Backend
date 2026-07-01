@@ -1,30 +1,24 @@
-def calculate_commission(amount):
-    if amount <= 100000:
-        return amount * 0.05
-    elif amount <= 500000:
-        return amount * 0.07
-    else:
-        return amount * 0.10
+from decimal import Decimal
 
 def calculate_commission(amount):
-    if amount <= 100000:
-        return amount * 0.05
-    elif amount <= 500000:
-        return amount * 0.04
-    elif amount <= 1000000:
-        return amount * 0.03
+    """Return commission as a Decimal."""
+    if amount <= Decimal('100000'):
+        return amount * Decimal('0.05')
+    elif amount <= Decimal('500000'):
+        return amount * Decimal('0.04')
+    elif amount <= Decimal('1000000'):
+        return amount * Decimal('0.03')
     else:
-        return amount * 0.025
+        return amount * Decimal('0.025')
 
-def get_featured_price(plan, quantity):
-    base_monthly = 500  # ETB per listing per month
-    if plan == 'yearly':
-        base_price_per_listing = base_monthly * 12 * 0.8
+def get_featured_price(quantity):
+    if quantity == 1:
+        return Decimal('300')
+    elif quantity == 2:
+        return Decimal('500')
+    elif quantity == 3:
+        return Decimal('675')
+    elif quantity == 4:
+        return Decimal('800')
     else:
-        base_price_per_listing = base_monthly
-    total = base_price_per_listing * quantity
-    if quantity == 2:
-        total *= 0.9
-    elif quantity >= 3:
-        total *= 0.8
-    return round(total, 2)
+        return Decimal('800') + (quantity - 4) * Decimal('180')

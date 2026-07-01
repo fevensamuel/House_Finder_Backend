@@ -1,0 +1,32 @@
+{% extends "admin/index.html" %}
+
+{% block extra_content %}
+    {{ block.super }}
+    {% load log %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Recent Actions</h3>
+                </div>
+                <div class="card-body">
+                    {% get_admin_log 10 as admin_log %}
+                    {% if admin_log %}
+                        <ul class="list-unstyled">
+                            {% for entry in admin_log %}
+                                <li class="mb-2">
+                                    <span class="badge bg-secondary">{{ entry.action_time|date:"M d, H:i" }}</span>
+                                    <span class="text-muted">{{ entry.user.get_full_name|default:entry.user.username }}</span>
+                                    <div>{{ entry.content_type }}: {{ entry.object_repr }}</div>
+                                    <small class="text-muted">{{ entry.action_flag|capfirst }}</small>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>None available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

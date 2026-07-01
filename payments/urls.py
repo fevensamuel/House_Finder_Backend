@@ -1,5 +1,9 @@
 from django.urls import path
-from .views import AdminStatsView, InitiateFeaturedPaymentView, InitiatePaymentView, MarkPayoutSentView, VerifyPaymentView
+from .views import (
+    InitiatePaymentView, VerifyPaymentView,
+    InitiateFeaturedPaymentView,
+    AdminStatsView, MarkPayoutSentView
+)
 
 urlpatterns = [
     path('payments/initiate/', InitiatePaymentView.as_view()),

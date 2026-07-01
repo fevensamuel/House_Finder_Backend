@@ -1,9 +1,10 @@
+import secrets
 import os
 from pathlib import Path
 from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = 'django-insecure-your-secret-key'
+SECRET_KEY = secrets.token_urlsafe(32)
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
@@ -21,6 +22,7 @@ INSTALLED_APPS = [
     'listings',
     'bookings',
     'payments',
+    'refunds',
 ]
 
 MIDDLEWARE = [
@@ -35,11 +37,10 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'house_finder.urls'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],   # <-- add this line
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -62,10 +63,10 @@ DATABASES = {
 }
 
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+   # {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    #{'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    #{'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+   # {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 LANGUAGE_CODE = 'en-us'
@@ -78,7 +79,6 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 AUTH_USER_MODEL = 'accounts.User'
 
 REST_FRAMEWORK = {
@@ -94,29 +94,29 @@ SIMPLE_JWT = {
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-# Jazzmin settings
 JAZZMIN_SETTINGS = {
     "site_title": "HouseFinder Admin",
     "site_header": "HouseFinder",
     "site_brand": "HouseFinder",
-    "site_url": "/admin/",                     # logo links to default admin (full management)
     "welcome_sign": "Welcome to HouseFinder Admin",
     "copyright": "HouseFinder",
     "search_model": ["listings.Listing", "accounts.User"],
     "show_ui_builder": False,
     "theme": "flatly",
     "dark_mode_theme": "darkly",
-    "navigation_expanded": False,              # collapsible app groups (optional)
+    "navigation_expanded": False,
     "custom_links": {
-        "Analytics Dashboard": [{
-            "name": "Dashboard",
-            "url": "/admin/dashboard/",
-            "icon": "fas fa-chart-line",
-            "permissions": ["is_staff"]
-        }]
+        "": [
+            {
+                "name": "📊 Analytics Dashboard",
+                "url": "/admin/dashboard/",
+                "icon": "fas fa-chart-line",
+                "permissions": ["is_staff"]
+            }
+        ]
     },
 }
 
-
-
 FCM_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'firebase-service-account.json')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

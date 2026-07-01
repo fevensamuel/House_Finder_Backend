@@ -1,10 +1,16 @@
+# payments/admin.py
 from django.contrib import admin
-from .models import FeaturedSubscription, Payout
+from .models import Payment, FeaturedSubscription, Payout
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'booking', 'amount', 'status', 'created_at')
+    list_filter = ('status', 'created_at')
 
 @admin.register(FeaturedSubscription)
 class FeaturedSubscriptionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'landlord', 'quantity', 'plan', 'total_amount', 'status', 'end_date')
-    list_filter = ('status', 'plan')
+    list_display = ('id', 'landlord', 'quantity', 'total_amount', 'status', 'end_date')
+    list_filter = ('status',)
     actions = ['activate_subscription']
 
     def activate_subscription(self, request, queryset):

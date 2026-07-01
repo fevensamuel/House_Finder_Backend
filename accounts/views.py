@@ -9,7 +9,7 @@ from .serializers import RegisterSerializer, UserSerializer, ProfileUpdateSerial
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
-    
+
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
@@ -24,7 +24,7 @@ class RegisterView(APIView):
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
-    
+
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
@@ -40,10 +40,10 @@ class LoginView(APIView):
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def get(self, request):
         return Response(UserSerializer(request.user).data)
-    
+
     def put(self, request):
         serializer = ProfileUpdateSerializer(request.user, data=request.data)
         if serializer.is_valid():
@@ -54,7 +54,7 @@ class MeView(APIView):
 class AvatarUploadView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
-    
+
     def put(self, request):
         if 'avatar' in request.FILES:
             request.user.avatar = request.FILES['avatar']
@@ -62,9 +62,30 @@ class AvatarUploadView(APIView):
             return Response({'avatar': request.user.avatar.url if request.user.avatar else None})
         return Response({'error': 'No image provided'}, status=400)
 
+class UploadIDDocumentView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def put(self, request):
+        side = request.data.get('side')  # 'front' or 'back'
+        if side not in ['front', 'back']:
+            return Response({'error': 'side must be "front" or "back"'}, status=400)
+        if 'id_document' not in request.FILES:
+            return Response({'error': 'No image provided'}, status=400)
+
+        file = request.FILES['id_document']
+        if side == 'front':
+            request.user.id_document_front = file
+        else:
+            request.user.id_document_back = file
+        request.user.save()
+        url = request.user.id_document_front.url if side == 'front' else request.user.id_document_back.url
+        return Response({f'id_document_{side}': url})
+
+
 class UpdateFCMTokenView(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request):
         token = request.data.get('fcm_token')
         if token:

@@ -19,8 +19,7 @@ def send_push_notification(user, title, body, data=None):
     )
     try:
         response = messaging.send(message)
-        print(f"Push sent to {user.email}: {title}")
         return response
     except Exception as e:
-        print(f"Push notification failed for {user.email}: {e}")
+        print(f"Push failed: {e}")
         return None
