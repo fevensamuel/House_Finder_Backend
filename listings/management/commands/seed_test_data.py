@@ -1,21 +1,22 @@
-# listings/management/commands/seed_test_data.py
+import random
 from django.core.management.base import BaseCommand
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from datetime import timedelta
-import random
+from decimal import Decimal
 from accounts.models import User
 from listings.models import Listing, ListingImage
 from bookings.models import Booking
 from payments.models import FeaturedSubscription, Payout
+from refunds.models import RefundRequest
 
 class Command(BaseCommand):
-    help = 'Seed test data for demo'
+    help = 'Seed 25+ test listings with realistic data'
 
     def handle(self, *args, **options):
         self.stdout.write('Seeding test data...')
 
-        # 1. Create users
+        # ---------- USERS ----------
         customer, _ = User.objects.get_or_create(
             email='customer@demo.com',
             defaults={
@@ -25,13 +26,13 @@ class Command(BaseCommand):
                 'role': 'customer',
                 'password': make_password('password123'),
                 'is_active': True,
-                'is_profile_complete': True,
                 'fayda_fin': '1234567890',
                 'cbe_bank_account': 'CBE-1000-12345',
                 'telebirr_phone': '+251 911 111 111',
                 'cbe_birr_phone': '+251 911 111 111',
             }
         )
+
         landlord, _ = User.objects.get_or_create(
             email='landlord@demo.com',
             defaults={
@@ -41,7 +42,6 @@ class Command(BaseCommand):
                 'role': 'landlord',
                 'password': make_password('password123'),
                 'is_active': True,
-                'is_profile_complete': True,
                 'fayda_fin': '9876543210',
                 'cbe_bank_account': 'CBE-1000-54321',
                 'telebirr_phone': '+251 922 222 222',
@@ -49,102 +49,64 @@ class Command(BaseCommand):
             }
         )
 
-        # 2. Create listings (5 active, 1 pending, 1 booked)
-        listings_data = [
-            {
-                'title': 'Luxury Villa in Old Airport',
-                'description': 'Stunning 4-bedroom villa with garden and pool.',
-                'price_per_month': 25000,
-                'city': 'Old Airport',
-                'address': 'Near International Community School',
-                'google_maps_link': 'https://maps.google.com/?q=Old+Airport+Addis+Ababa',
-                'bedrooms': 4,
-                'bathrooms': 3,
-                'kitchen': 1,
-                'living_room': 1,
-                'category': 'Villa',
-                'status': 'active',
-                'is_featured': True,
-                'image_urls': [
-                    'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80',
-                ]
-            },
-            {
-                'title': 'Modern Apartment in Bole',
-                'description': 'Fully furnished 2-bedroom apartment near Edna Mall.',
-                'price_per_month': 18000,
-                'city': 'Bole',
-                'address': 'Behind Edna Mall',
-                'google_maps_link': 'https://maps.google.com/?q=Bole+Edna+Mall+Addis+Ababa',
-                'bedrooms': 2,
-                'bathrooms': 2,
-                'kitchen': 1,
-                'living_room': 1,
-                'category': 'Apartment',
-                'status': 'active',
-                'is_featured': False,
-                'image_urls': [
-                    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80',
-                ]
-            },
-            {
-                'title': 'Cozy Studio in CMC',
-                'description': 'Compact studio with modern amenities.',
-                'price_per_month': 8000,
-                'city': 'CMC',
-                'address': 'Near Ayat Roundabout',
-                'google_maps_link': 'https://maps.google.com/?q=CMC+Addis+Ababa',
-                'bedrooms': 1,
-                'bathrooms': 1,
-                'kitchen': 1,
-                'living_room': 1,
-                'category': 'Studio',
-                'status': 'active',
-                'is_featured': False,
-                'image_urls': [
-                    'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80',
-                ]
-            },
-            {
-                'title': 'Family House in Kazanchis',
-                'description': 'Spacious 3-bedroom house with parking.',
-                'price_per_month': 22000,
-                'city': 'Kazanchis',
-                'address': 'Near UNECA',
-                'google_maps_link': 'https://maps.google.com/?q=Kazanchis+Addis+Ababa',
-                'bedrooms': 3,
-                'bathrooms': 2,
-                'kitchen': 1,
-                'living_room': 1,
-                'category': 'House',
-                'status': 'active',
-                'is_featured': True,
-                'image_urls': [
-                    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
-                ]
-            },
-            {
-                'title': 'Penthouse in Mexico Area',
-                'description': 'Luxury penthouse with panoramic views.',
-                'price_per_month': 35000,
-                'city': 'Mexico',
-                'address': 'Opposite Wabi Shebelle Hotel',
-                'google_maps_link': 'https://maps.google.com/?q=Mexico+Addis+Ababa',
-                'bedrooms': 3,
-                'bathrooms': 3,
-                'kitchen': 1,
-                'living_room': 1,
-                'category': 'Apartment',
-                'status': 'pending',   # pending approval
-                'is_featured': False,
-                'image_urls': [
-                    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80',
-                ]
-            },
+        # ---------- LISTINGS (25+) ----------
+        # Predefined images (Unsplash)
+        image_pool = [
+            'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=800&q=80',
         ]
 
-        for data in listings_data:
+        cities = ['Bole', 'CMC', 'Kazanchis', 'Old Airport', 'Mexico', 'Ayat', 'Summit', 'Lideta', 'Sarbet', 'Addis Ababa']
+        categories = ['Apartment', 'House', 'Villa', 'Studio']
+
+        listing_data = []
+
+        for i in range(1, 26):
+            city = random.choice(cities)
+            category = random.choice(categories)
+            bedrooms = random.randint(1, 5)
+            bathrooms = random.randint(1, 3)
+            kitchen = random.randint(1, 2)
+            living_room = random.randint(1, 2)
+            price = random.choice([5000, 7000, 10000, 15000, 20000, 25000, 30000, 40000, 50000])
+            is_featured = random.choice([True, False])
+            status = 'active' if random.random() > 0.2 else 'pending'
+
+            title = f"{random.choice(['Luxury', 'Modern', 'Cozy', 'Spacious', 'Elegant'])} " \
+                    f"{category} in {city} " \
+                    f"{random.choice(['with Garden', 'with Pool', 'with Balcony', 'with Parking', 'with Security'])}"
+
+            description = f"Beautiful {bedrooms}-bedroom {category} located in the heart of {city}. " \
+                          f"Features: {bedrooms} beds, {bathrooms} baths, {kitchen} kitchen, {living_room} living room. " \
+                          f"{random.choice(['Fully furnished', 'Semi-furnished', 'Unfurnished'])}. " \
+                          f"{random.choice(['Close to schools, malls, and public transport.', 'Quiet neighborhood with 24/7 security.', 'Great view of the city skyline.'])}"
+
+            listing_data.append({
+                'title': title,
+                'description': description,
+                'price_per_month': price,
+                'city': city,
+                'address': f"{random.randint(1, 200)} {random.choice(['Main St', 'Bole Rd', 'CMC Rd', 'Kazanchis St', 'Old Airport Rd', 'Mexico St'])}",
+                'google_maps_link': f'https://maps.google.com/?q={city}+Addis+Ababa',
+                'bedrooms': bedrooms,
+                'bathrooms': bathrooms,
+                'kitchen': kitchen,
+                'living_room': living_room,
+                'category': category,
+                'status': status,
+                'is_featured': is_featured,
+                'image_urls': random.sample(image_pool, random.randint(1, 3)),
+            })
+
+        for data in listing_data:
             image_urls = data.pop('image_urls', [])
             listing, created = Listing.objects.get_or_create(
                 title=data['title'],
@@ -152,25 +114,30 @@ class Command(BaseCommand):
                 defaults=data
             )
             if created:
-                # Add images (as image_url since we're using URLField)
                 for url in image_urls:
-                    ListingImage.objects.create(listing=listing, image_url=url)
+                    ListingImage.objects.create(listing=listing, image=url)
                 self.stdout.write(f'Created listing: {listing.title}')
-            else:
-                self.stdout.write(f'Listing already exists: {listing.title}')
 
-        # 3. Create a booking (customer rents one active listing)
-        active_listing = Listing.objects.filter(status='active', landlord=landlord).first()
+        # ---------- BOOKING ----------
+        active_listing = Listing.objects.filter(status='active').first()
         if active_listing:
+            months = random.randint(2, 6)
+            total_rent = active_listing.price_per_month * months
+            # Convert to Decimal for multiplication
+            commission_rate = Decimal('0.05')
+            customer_commission = total_rent * commission_rate
+            landlord_commission = total_rent * commission_rate
+            total_paid = total_rent + customer_commission
+
             booking, _ = Booking.objects.get_or_create(
                 customer=customer,
                 listing=active_listing,
                 defaults={
-                    'months': 3,
-                    'total_rent': active_listing.price_per_month * 3,
-                    'customer_commission': active_listing.price_per_month * 3 * 0.05,
-                    'landlord_commission': active_listing.price_per_month * 3 * 0.05,
-                    'total_paid': active_listing.price_per_month * 3 * 1.05,
+                    'months': months,
+                    'total_rent': total_rent,
+                    'customer_commission': customer_commission,
+                    'landlord_commission': landlord_commission,
+                    'total_paid': total_paid,
                     'status': 'paid',
                     'payment_reference': 'demo-pay-ref',
                     'paid_at': timezone.now(),
@@ -179,14 +146,14 @@ class Command(BaseCommand):
             )
             self.stdout.write(f'Created booking for {customer.display_name} on {active_listing.title}')
 
-        # 4. Create a pending refund request for that booking
-        if active_listing:
+        # ---------- REFUND ----------
+        if active_listing and booking:
             refund, _ = RefundRequest.objects.get_or_create(
                 booking=booking,
                 customer=customer,
                 landlord=landlord,
                 defaults={
-                    'description': 'Misleading photos – AC missing.',
+                    'description': 'Misleading photos – AC missing and water leakage.',
                     'misleading_photos': ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=400&q=80'],
                     'reality_photos': ['https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=400&q=80'],
                     'status': 'pending',
@@ -194,14 +161,13 @@ class Command(BaseCommand):
             )
             self.stdout.write(f'Created refund request for booking {booking.id}')
 
-        # 5. Create a FeaturedSubscription for a listing
+        # ---------- FEATURED SUBSCRIPTION (no 'plan' field) ----------
         featured_listing = Listing.objects.filter(is_featured=True).first()
         if featured_listing:
+            # FeaturedSubscription model does not have 'plan' field; use 'quantity' and 'total_amount'
             sub, _ = FeaturedSubscription.objects.get_or_create(
                 landlord=landlord,
-                listing=featured_listing,
                 defaults={
-                    'plan': 'monthly',
                     'quantity': 1,
                     'total_amount': 500,
                     'end_date': timezone.now() + timedelta(days=30),
@@ -209,10 +175,11 @@ class Command(BaseCommand):
                     'payment_reference': 'demo-feat-ref',
                 }
             )
+            sub.listings.add(featured_listing)
             self.stdout.write(f'Created featured subscription for {featured_listing.title}')
 
-        # 6. Create a pending Payout for the landlord
-        if active_listing:
+        # ---------- PAYOUT ----------
+        if active_listing and booking:
             payout, _ = Payout.objects.get_or_create(
                 booking=booking,
                 landlord=landlord,
@@ -223,4 +190,4 @@ class Command(BaseCommand):
             )
             self.stdout.write(f'Created pending payout for landlord {landlord.display_name}')
 
-        self.stdout.write(self.style.SUCCESS('Test data seeding complete!'))
+        self.stdout.write(self.style.SUCCESS(f'✅ Seeded {len(listing_data)} listings, users, bookings, refunds, featured, and payouts.'))

@@ -1,3 +1,4 @@
+# listings/models.py
 from django.db import models
 from django.utils import timezone
 from accounts.models import User
@@ -22,6 +23,14 @@ CATEGORY_CHOICES = [
     ('Studio', 'Studio'),
 ]
 
+ROOM_TYPE_CHOICES = [
+    ('overall', 'Overall property photos'),
+    ('kitchen', 'Kitchen'),
+    ('living_room', 'Living room'),
+    ('bedroom', 'Bedroom'),
+    ('bathroom', 'Bathroom'),
+]
+
 class Listing(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending Approval'),
@@ -30,10 +39,11 @@ class Listing(models.Model):
         ('hidden', 'Hidden by Admin'),
         ('sold', 'Sold'),
     )
+
     landlord = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listings')
     title = models.CharField(max_length=200)
     description = models.TextField()
-    price_per_month = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    price_per_month = models.DecimalField(max_digits=10, decimal_places=2)
     city = models.CharField(max_length=50, choices=DISTRICT_CHOICES, default='Addis Ababa')
     address = models.CharField(max_length=255)
     google_maps_link = models.URLField(blank=True, null=True)
@@ -54,15 +64,14 @@ class Listing(models.Model):
     def __str__(self):
         return self.title
 
-    # ... rest (penalty_amount, get_availability)
     @property
     def penalty_amount(self):
         from payments.utils import calculate_commission
-        base = self.sale_price or self.price_per_month
+        base = self.price_per_month
         if not base:
             return 0
         commission = calculate_commission(base)
-        return base + commission
+        return float(base + commission * 2)
 
     def get_availability(self):
         return {
@@ -74,9 +83,10 @@ class Listing(models.Model):
 
 class ListingImage(models.Model):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='listings/')
-    room_type = models.CharField(max_length=50)
+    # Use URLField to store both external URLs and uploaded file URLs
+    image = models.URLField(max_length=500, blank=True, null=True)
+    room_type = models.CharField(max_length=50, choices=ROOM_TYPE_CHOICES, default='overall')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.listing.title} - {self.room_type}"
+        return f"{self.listing.title} - {self.get_room_type_display()}"

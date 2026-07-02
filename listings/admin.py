@@ -9,7 +9,7 @@ class ListingImageInline(admin.TabularInline):
 
 @admin.register(Listing)
 class ListingAdmin(admin.ModelAdmin):
-    list_display = ('title', 'landlord', 'city', 'category', 'price_per_month', 'status', 'is_featured')  # sale_price removed
+    list_display = ('title', 'landlord', 'city', 'category', 'price_per_month', 'status', 'is_featured')
     list_filter = ('status', 'city', 'is_featured')
     search_fields = ('title', 'address', 'landlord__display_name')
     inlines = [ListingImageInline]
@@ -43,3 +43,4 @@ class ListingAdmin(admin.ModelAdmin):
 class ListingImageAdmin(admin.ModelAdmin):
     list_display = ('listing', 'room_type', 'uploaded_at')
     list_filter = ('room_type',)
+    search_fields = ('listing__title',)

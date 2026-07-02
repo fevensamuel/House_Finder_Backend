@@ -1,4 +1,4 @@
-# listings/views.py – add role check in perform_create
+# listings/views.py
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -24,30 +24,28 @@ class ListingViewSet(viewsets.ModelViewSet):
         min_price = self.request.query_params.get('min_price')
         max_price = self.request.query_params.get('max_price')
         bedrooms = self.request.query_params.get('bedrooms')
-        transaction_type = self.request.query_params.get('type')  # rent
+        category = self.request.query_params.get('category')
 
         if search:
             queryset = queryset.filter(Q(title__icontains=search) | Q(description__icontains=search))
-        if city:
+        if city and city != 'All':
             queryset = queryset.filter(city__icontains=city)
         if min_price:
-            queryset = queryset.filter(price_per_month__gte=min_price) | queryset.filter(sale_price__gte=min_price)
+            queryset = queryset.filter(price_per_month__gte=min_price)
         if max_price:
-            queryset = queryset.filter(price_per_month__lte=max_price) | queryset.filter(sale_price__lte=max_price)
+            queryset = queryset.filter(price_per_month__lte=max_price)
         if bedrooms:
             queryset = queryset.filter(bedrooms=bedrooms)
+        if category and category != 'All':
+            queryset = queryset.filter(category=category)
 
-        if transaction_type == 'rent':
-            queryset = queryset.filter(price_per_month__isnull=False)
-
+        # Featured first
         return queryset.order_by('-is_featured', '-created_at')
 
     def perform_create(self, serializer):
-        # Ensure only landlords can post
         if self.request.user.role != 'landlord':
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("Only landlords can post listings.")
-        # Also ensure profile is complete (optional)
         if not self.request.user.is_profile_complete:
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'error': 'Please complete your profile before posting.'})
